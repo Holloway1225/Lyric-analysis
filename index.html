@@ -35,7 +35,7 @@ const END=`
 
 Aim for an exceptional album-ready composition, not merely a competent interpretation.
 
-Return only the finished original song.`;
+Return only the finished original song and make it copyable.`;
 let controller=null,fileName='songwriting';
 $('run').onclick=async()=>{const c=settings(),source={title:$('title').value.trim(),artist:$('artist').value.trim(),lyrics:$('lyrics').value.trim(),context:$('extra').value.trim()};if(!source.title||!source.lyrics)return status('Add a song title and lyrics.',true);if(!c.g&&!c.a){$('keys').open=true;return status('Add an API key.',true)}controller=new AbortController();const signal=controller.signal;$('run').disabled=$('clear').disabled=true;$('cancel').disabled=false;try{let brief='',last;for(const provider of [...(c.g?['Groq']:[]),...(c.a?['Claude']:[])]){try{status(provider+': distilling emotional foundation…');brief=await request(provider,c,INSTR,JSON.stringify(source),1600,signal);if(brief.length<80)throw Error('Brief too short');break}catch(e){brief='';last=e;if(signal.aborted)throw e}}if(!brief)throw last||Error('No brief generated');$('songPrompt').value=OPEN+brief+END;fileName=source.title.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'')||'songwriting';$('out').hidden=false;status('Songwriting prompt ready.');$('out').scrollIntoView({behavior:'smooth',block:'nearest'})}catch(e){status(signal.aborted?'Cancelled.':e.message,true)}finally{controller=null;$('run').disabled=$('clear').disabled=false;$('cancel').disabled=true}};
 $('cancel').onclick=()=>controller?.abort();$('clear').onclick=()=>{for(const i of ['title','artist','lyrics','extra','songPrompt'])$(i).value='';$('out').hidden=true;status('')};
